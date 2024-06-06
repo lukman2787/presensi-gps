@@ -61,6 +61,16 @@
                 <div id="map"></div>
             </div>
         </div>
+
+        <audio id="notifikasi_in">
+            <source src="{{ asset('assets/sound/notifikasi_in.mp3')}}" type="audio/mpeg">
+        </audio>
+        <audio id="notifikasi_out">
+            <source src="{{ asset('assets/sound/notifikasi_out.mp3')}}" type="audio/mpeg">
+        </audio>
+        <audio id="notifikasi_radius">
+            <source src="{{ asset('assets/sound/notifikasi_radius.mp3')}}" type="audio/mpeg">
+        </audio>
     </div>
 
     @slot('custom_script')
@@ -69,6 +79,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
+            var notifikasi_in = document.getElementById('notifikasi_in');
+            var notifikasi_out = document.getElementById('notifikasi_out');
+            var notifikasi_radius = document.getElementById('notifikasi_radius');
             Webcam.set({
                 height: 480
                 , width: 640
@@ -84,6 +97,9 @@
             }
 
             function successCallback(position) {
+                var lat_office = -6.7049707111210735;
+                var lon_office = 108.41258614593008;
+
                 var latitude = position.coords.latitude;
                 var longitude = position.coords.longitude;
                 lokasi.value = latitude + ',' + longitude;
@@ -95,11 +111,11 @@
 
                 var marker = L.marker([latitude, longitude]).addTo(map);
 
-                var circle = L.circle([latitude, longitude], {
+                var circle = L.circle([lat_office, lon_office], {
                     color: 'red'
                     , fillColor: '#f03'
                     , fillOpacity: 0.5
-                    , radius: 50
+                    , radius: 75
                 }).addTo(map);
             }
 
@@ -128,20 +144,30 @@
                     }
                     , cache: false
                     , success: function(response) {
-                        if (response == 0) {
+                        var status = response.split("|");
+                        if (status[0] == "success") {
+                            if (status[2] == "in") {
+                                notifikasi_in.play();
+                            } else {
+                                notifikasi_out.play();
+                            }
                             Swal.fire({
                                 title: "Berhasil!"
-                                , text: "Terima kasih, selamat bekerja!"
+                                , text: status[1]
                                 , icon: "success"
                                 , confirmButtonText: "OK"
                             });
                             setTimeout(function() {
                                 location.href = '/dashboard';
                             }, 3000);
+
                         } else {
+                            if (status[2] == "radius") {
+                                notifikasi_radius.play();
+                            }
                             Swal.fire({
                                 title: "Eror!"
-                                , text: "Maaf, Gagal Absen, Silahkan hubungi tim IT !"
+                                , text: status[1]
                                 , icon: "error"
                                 , confirmButtonText: "OK"
                             });
